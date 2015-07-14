@@ -26,4 +26,4 @@ if ($option){#Hide ALL output
 
 #reset terminal
 `stty echo`;
-print `clear`;
+print ` clear`;
