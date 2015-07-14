@@ -4,7 +4,7 @@
 #For best performance, add an alias to your ~/.bashrc that runs this script
 
 #hide output
-`stty -echo`;
+` stty -echo`;
 
 #clear terminal
 print ` clear`;
@@ -25,5 +25,5 @@ if ($option){#Hide ALL output
 }
 
 #reset terminal
-`stty echo`;
+` stty echo`;
 print ` clear`;
