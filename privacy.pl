@@ -1,17 +1,23 @@
 #!/usr/bin/perl
 #Created By Tyler S Johnson
 #July 10, 2015
+#
+#Comments:
+#This script should be located in the ~/ folder
+#
 #For best performance, add an alias to your ~/.bashrc that runs this script
+#For example, the following line makes it so the "po" command will run this script, 
+#and then remove the history of having called it:
+#alias po=' ~/.privacy.pl; history -d $((HISTCMD-1))'
 
-#hide output
-` stty -echo`;
+#hide output and clear terminal
+print ` stty -echo; clear`;
 
-#clear terminal
-print ` clear`;
+#global variables
 my $cmd = "hidden";
 my $option = shift;
 
-# No footprints in History
+# no footprints in History
 if ($option){#Hide ALL output
         while ($cmd ne "q\n"){
                 $cmd = <STDIN>;
