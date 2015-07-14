@@ -19,8 +19,8 @@ if ($option){#Hide ALL output
         }
 } else {#Hide only typed output
         while ($cmd ne "q\n"){
-        $cmd = <STDIN>;
-        system (" $cmd");
+                $cmd = <STDIN>;
+                system (" $cmd");
         }
 }
 
