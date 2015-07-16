@@ -8,7 +8,7 @@
 #For best performance, add an alias to your ~/.bashrc that runs this script
 #For example, the following line makes it so the "po" command will run this script, 
 #and then remove the history of having called it:
-#alias po=' ~/.privacy.pl; history -d $((HISTCMD-1))'
+#alias po=' history -d $((HISTCMD-1)); ~/.privacy.pl'
 use Getopt::Long qw(:config ignore_case);
 use Net::OpenSSH;#I want this to be optional
 use Cwd;
