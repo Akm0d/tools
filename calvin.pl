@@ -1,5 +1,13 @@
 #!/usr/bin/perl
+#use strict;
+#use warnings;
 
+#Verify Correct packages are installed
+my $espeak = `dpkg -l|grep -E '^ii' |grep espeak`;
+if(!$espeak){
+        print "package \"espeak\" must be installed\n";
+        exit(1);
+}
 my $words = "talk";
 my $num_args = $#ARGV;
 my $mode ||= talk;#command,-c,talk,-t,spell,-s,quiet,-q
