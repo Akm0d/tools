@@ -296,7 +296,8 @@ for ($i = [convert]::ToInt32($start); $i -le $end; $i++){
     # Show the same number of digits as the largest number in the series
     $digits = $end.ToString().Length 
     $user_name = $base_name + ("{0:D$digits}" -f $i).ToString()
-    Write-Host "Creating user: $user_name@$realm $base_name $user_name@$email $path"
+    Write-Progress -Activity "Creating user in $path" -Status "$user_name@($realm|$email) $surname" `
+        -PercentComplete(($i - [convert]::ToInt32($start))/($end - [convert]::ToInt32($start))*100)
     try {
         New-ADUser -Name $user_name -SamAccountName $user_name -DisplayName $user_name -GivenName $user_name -Surname $base_name.ToUpper()`
             -AccountPassword (ConvertTo-SecureString "$password" -AsPlainText -force) -PasswordNeverExpires $True `
