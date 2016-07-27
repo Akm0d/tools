@@ -1,5 +1,6 @@
 #!/usr/bin/python2.7
 import re
+import sys
 from string import maketrans
 
 # keep the alphabet in a list
@@ -32,8 +33,12 @@ def most_common_letter( text, skip ):
         text = text.translate(None,str(letter))
     return most_common
 
-# Get the cypher from user
-cypher = raw_input("Enter the cypher, then press ENTER:\n").upper()
+# Get the cypher from user if there wasn't one on the command line
+cypher = ""
+if len(sys.argv) > 1:
+    cypher = str(sys.argv[1]).upper()
+else: 
+    cypher = raw_input("Enter the cypher, then press ENTER:\n").upper()
 original_word_list = cypher.split()
 
 original_lists = [[] for i in range(max_word_size)]
