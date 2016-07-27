@@ -57,13 +57,9 @@ if (!@servers){
 }
 
 # Choose the location for saving the files
-# TODO Loop until valid input is given
 print "Save file to [~]:\n";
 chomp(my $location = <STDIN>);
 $location ||= "~";
-if ($location =~ /\s/){
-	print "Invalid file location";
-}
 
 # Choose username to use
 print "Username [root]:\n";
@@ -76,9 +72,15 @@ if ($user =~ /\s/){
 # Send the files to servers
 for my $server (@servers){
 	chomp($server);
+	my $files_to_transfer = "";
 	for my $number (@files){
 		chomp($file_name = @ls[$number]);
-		print "scp $file_name $user\@$server:$location\n";
-		`scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null $file_name $user\@$server:$location`;
+		if (!$files_to_transfer){
+			$files_to_transfer = $file_name
+		} else {
+			$files_to_transfer = "$file_name,$files_to_transfer"
+		}
 	}	
+	print "scp ./{$files_to_transfer} $user\@$server:$location\n";
+	`scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null ./{$files_to_transfer} $user\@$server:$location`;
 }
