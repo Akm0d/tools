@@ -1,9 +1,12 @@
 #!/usr/bin/python2.7
+import re
 from string import maketrans
 
 # keep the alphabet in a list
-max_word_size = 50
+alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+max_word_size = 25
 offset = 65
+solutions = []
 
 # Returns the number value of letters. A is 0 and Z is 25
 def letter_number(letter):
@@ -41,7 +44,7 @@ for word in original_word_list:
     hashmap[word.strip().upper()] = set() 
     
 # Make a list of all the letters in the cypher from most common to least common
-letters_by_frequency = "etaoinshrdlcumwfgypbvkjxqz"
+letters_by_frequency = "ETAOINSHRDLCUMWFGYPBVKJXQZ"
 cypher_by_frequency = ""
 least_frequent_letter = ""
 while least_frequent_letter != "~":
@@ -50,8 +53,12 @@ while least_frequent_letter != "~":
         cypher_by_frequency += least_frequent_letter
 
 print ("Letter frequency: " + cypher_by_frequency)
+difference = len(letters_by_frequency) - len(cypher_by_frequency)
+translate_table = maketrans(cypher_by_frequency,letters_by_frequency[:-difference])
+solution = cypher.translate(translate_table)
+print solution
 
-# Import the dictionary, possibly ask for a filename
+# TODO Import the dictionary, possibly ask for a filename
 filename = "dictionary.txt"
 words = set()
 with open(filename) as f: words = set(f.readlines())
@@ -92,6 +99,25 @@ def unused_letters(input_letters,input_string):
             unused_letters += x
     return unused_letters
 
+# See if a word matches what I have so far
+def match(word,key,crypto_letters,translation):
+    #print "\nMATCHING\n----------"
+    #print crypto_letters + " : " + translation
+    #print key + " : " + word
+    k = 0
+    for w in word:
+        c = 0
+        for t in translation:
+            if w == t: # if a letter in the word is in the translation
+                # It has to match the same spot in the key
+                if not key[k] == crypto_letters[c]:
+                    #print "False because " + t + " = " + crypto_letters[c] + " not " + key[k]
+                    return False
+            c += 1
+        k += 1
+    #print "True"
+    return True
+
 # Recursive function
 def decrypt(crypto_letters,translation):
     # If a key has a letter not in the crypto_letters string, then call decrypt on it
@@ -99,16 +125,18 @@ def decrypt(crypto_letters,translation):
         unused = unused_letters(crypto_letters,key)
         # Base case: Once all the letters in all the keys have been used
         if not unused == "":
-            new_trans = ""
-            # TODO try multiple translation paths
             for word in hashmap[key]:
-                # If the word doesn't fit the current translation then skip it
-                    # Do this with the map() function and set intersections?
-                # Else, Try to decript it
-                # TODO Return "None" if translation isn't possible
-            # Do I want this to return?  I might be eliminating possilbe translations
-            return decrypt(crypto_letters + unused,translation + new_trans)
-    return maketranse(crypto_letters,translation)
+                new_trans = unused_letters(translation,word)
+                if not new_trans == "":
+                    # If the word has any letters in the translation, they should be in the right spot
+                    if len(new_trans) == len(unused) and match(word,key,crypto_letters,translation):
+                        # If possible doesn't end with a possible word then skip it and continue in loop
+                        possible = decrypt(crypto_letters + unused,translation + new_trans)
+                        if not possible == "":
+                            return possible
+            # If none of the words work out then return an empty string
+            return ""
+    return crypto_letters + ":" + translation
 
 # look at the first key and then look at its first value
 # look at the next key 
@@ -119,9 +147,17 @@ def decrypt(crypto_letters,translation):
 for key in hashmap:
     #print "\n" + key + ":\n"+ str(hashmap[key])
     for word in hashmap[key]:
-        translate_table = decrypt(key,word)
-        if not answer == None:
-            print(text.translate(translate_table))
+        answer = decrypt(unused_letters("",key),unused_letters("",word))
+        # Turn answer into translate table
+        mixed = re.sub(':.+$','',answer)
+        translated = re.sub('.+:','',answer)
+        if (len(mixed) == len(translated)) and not answer == "":
+            translate_table = maketrans(mixed,translated)
+            solution = cypher.translate(translate_table)
+            if (solution not in solutions):
+                # print "Translate table -> " + answer
+                solutions.append(solution)
+                print(solution)
 # This only needs to be done for one key in the hashmap as an initialization of the recursion
 # TODO Or does it?
-    exit()
+#    exit()
