@@ -44,11 +44,10 @@ hashmap = {}
 for word in original_word_list:
     original_lists[len(word.strip())].append(word.strip().upper())
     hashmap[word.strip().upper()] = set() 
-    
-# Add words to the dictionary based on their length
 dictionary = [[] for i in range(max_word_size)]
 for word in words:
-    dictionary[len(word.strip())].append(word.strip().upper())
+    new_word = re.sub('[^A-Z]+',"",word.strip().upper())
+    dictionary[len(new_word)].append(new_word)
 
 # Add all matching words to the hash map
 word_length = 0
