@@ -3,20 +3,40 @@ import re
 import sys
 from string import maketrans
 
-# keep the alphabet in a list
-alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 max_word_size = 25
 offset = 65
 solutions = []
+filename = ""
+cypher = ""
+
+# Handle command line arguments
+if len(sys.argv) > 1:
+    if sys.argv[1] == "help" or sys.argv[1] == "-?" or sys.argv[1] == "-h" or sys.argv[1] == "--help":
+        print "usage: ./decrypt.py -d [dictionary] -c \"[cryptogram]\""
+        exit()
+if len(sys.argv) >= 3:
+    if sys.argv[1] == "-c":
+        cypher = sys.argv[2].upper()
+    elif sys.argv[1] == "-d":
+        filename = sys.argv[2]
+if len(sys.argv) == 5:
+    if sys.argv[3] == "-c":
+        cypher = sys.argv[4].upper()
+    elif sys.argv[3] == "-d":
+        filename = sys.argv[4]
+
+# Import the dictionary, ask for a filename if none was given
+if filename == "": 
+    filename = raw_input("Path to the dictionary file: [/usr/share/dict/words] ")
+    if filename == "":
+        filename = "/usr/share/dict/words"
+words = set()
+with open(filename) as f: words = set(f.readlines())
 
 # Get the cypher from user if there wasn't one on the command line
-cypher = ""
-if len(sys.argv) > 1:
-    cypher = str(sys.argv[1]).upper()
-else: 
+if cypher == "":
     cypher = raw_input("Enter the cypher, then press ENTER:\n").upper()
 original_word_list = map(lambda x:re.sub('[^A-Z]+',"",x), cypher.split())
-
 original_lists = [[] for i in range(max_word_size)]
 hashmap = {}
 
@@ -25,11 +45,6 @@ for word in original_word_list:
     original_lists[len(word.strip())].append(word.strip().upper())
     hashmap[word.strip().upper()] = set() 
     
-# TODO Import the dictionary, possibly ask for a filename
-filename = "dictionary.txt"
-words = set()
-with open(filename) as f: words = set(f.readlines())
-
 # Add words to the dictionary based on their length
 dictionary = [[] for i in range(max_word_size)]
 for word in words:
