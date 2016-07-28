@@ -36,36 +36,6 @@ with open(filename) as f: words = set(f.readlines())
 # Get the cypher from user if there wasn't one on the command line
 if cypher == "":
     cypher = raw_input("Enter the cypher, then press ENTER:\n").upper()
-original_word_list = map(lambda x:re.sub('[^A-Z]+',"",x), cypher.split())
-original_lists = [[] for i in range(max_word_size)]
-hashmap = {}
-
-# Add words to the dictionary based on their length
-for word in original_word_list:
-    original_lists[len(word.strip())].append(word.strip().upper())
-    hashmap[word.strip().upper()] = set() 
-dictionary = [[] for i in range(max_word_size)]
-for word in words:
-    new_word = re.sub('[^A-Z]+',"",word.strip().upper())
-    dictionary[len(new_word)].append(new_word)
-
-# Add all matching words to the hash map
-word_length = 0
-for lists in (original_lists):
-    if (lists):
-        for x_word in lists:
-            for y_word in (dictionary[word_length]):
-                x_trans = x_word
-                y_trans = y_word
-                for i in range(0,word_length):
-                    x_tab = maketrans(str(x_trans[i]),str(chr(33+i)))
-                    y_tab = maketrans(str(y_trans[i]),str(chr(33+i)))
-                    x_trans = x_trans.translate(x_tab)
-                    y_trans = y_trans.translate(y_tab)
-                # When a dictionary word has letters in the same places as a cypher
-                if x_trans == y_trans:
-                    hashmap[x_word].add(y_word)
-    word_length += 1
 
 # Return letters in the string that aren't part of the input_letters
 def unused_letters(input_letters,input_string):
@@ -96,7 +66,7 @@ def match(word,key,crypto_letters,translation):
    return True
 
 # Recursive function
-def decrypt(crypto_letters,translation):
+def decrypt(crypto_letters,translation,hashmap):
     # If a key has a letter not in the crypto_letters string, then call decrypt on it
     for key in hashmap:
         unused = unused_letters(crypto_letters,key)
@@ -108,25 +78,70 @@ def decrypt(crypto_letters,translation):
                     # If the word has any letters in the translation, they should be in the right spot
                     if len(new_trans) == len(unused) and match(word,key,crypto_letters,translation):
                         # If possible doesn't end with a possible word then skip it and continue in loop
-                        possible = decrypt(crypto_letters + unused,translation + new_trans)
+                        possible = decrypt(crypto_letters + unused,translation + new_trans,hashmap)
                         if not possible == "":
                             return possible
             # If none of the words work out then return an empty string
             return ""
     return crypto_letters + ":" + translation
 
-# Initialize Recursion
-for key in hashmap:
-    #print "\n" + key + ":\n"+ str(hashmap[key])
-    for word in hashmap[key]:
-        answer = decrypt(unused_letters("",key),unused_letters("",word))
-        # Turn answer into translate table
-        mixed = re.sub(':.+$','',answer)
-        translated = re.sub('.+:','',answer)
-        if (len(mixed) == len(translated)) and not answer == "":
-            translate_table = maketrans(mixed,translated)
-            solution = cypher.translate(translate_table)
-            if (solution not in solutions):
-                # print "Translate table -> " + answer
-                solutions.append(solution)
-                print(solution)
+# Make it possible to loop through all the calculations again
+def full_decryption(cypher_text):
+    original_word_list = map(lambda x:re.sub('[^A-Z]+',"",x), cypher_text.split())
+    original_lists = [[] for i in range(max_word_size)]
+    hashmap = {}
+
+    # Add words to the dictionary based on their length
+    for word in original_word_list:
+        original_lists[len(word.strip())].append(word.strip().upper())
+        hashmap[word.strip().upper()] = set() 
+    dictionary = [[] for i in range(max_word_size)]
+    for word in words:
+        new_word = re.sub('[^A-Z]+',"",word.strip().upper())
+        dictionary[len(new_word)].append(new_word)
+
+    # Add all matching words to the hash map
+    word_length = 0
+    for lists in (original_lists):
+        if (lists):
+            for x_word in lists:
+                for y_word in (dictionary[word_length]):
+                    x_trans = x_word
+                    y_trans = y_word
+                    for i in range(0,word_length):
+                        x_tab = maketrans(str(x_trans[i]),str(chr(33+i)))
+                        y_tab = maketrans(str(y_trans[i]),str(chr(33+i)))
+                        x_trans = x_trans.translate(x_tab)
+                        y_trans = y_trans.translate(y_tab)
+                    # When a dictionary word has letters in the same places as a cypher
+                    if x_trans == y_trans:
+                        hashmap[x_word].add(y_word)
+        word_length += 1
+
+    # Initialize Recursion
+    for key in hashmap:
+        #print "\n" + key + ":\n"+ str(hashmap[key])
+        for word in hashmap[key]:
+            answer = decrypt(unused_letters("",key),unused_letters("",word),hashmap)
+            # Turn answer into translate table
+            mixed = re.sub(':.+$','',answer)
+            translated = re.sub('.+:','',answer)
+            if (len(mixed) == len(translated)) and not answer == "":
+                translate_table = maketrans(mixed,translated)
+                solution = cypher_text.translate(translate_table)
+                if (solution not in solutions):
+                    # print "Translate table -> " + answer
+                    solutions.append(solution)
+                    print(solution)
+
+# Run the program once
+full_decryption(cypher)
+
+# run the program on each solution until There are no more possibilitie
+solutions_size = len(solutions)
+new_solutions = 1
+while not solutions_size == new_solutions:
+    for solution in solutions:
+        full_decryption(solution)
+    new_solutions = len(solutions)
+    
