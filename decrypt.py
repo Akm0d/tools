@@ -68,6 +68,8 @@ def match(word,key,crypto_letters,translation):
 # Recursive function
 def decrypt(crypto_letters,translation,hashmap):
     # Print out the text being worked on
+    #untested_letters = unused_letters("qwertyuiopasdfghjklzxcvbnm",crypto_letters)
+    #output_trans = maketrans(crypto_letters+untested_letters,translation+"*"*len(untested_letters))
     output_trans = maketrans(crypto_letters,translation)
     sys.stdout.write(cypher.translate(output_trans)+"\r")
     sys.stdout.flush()
@@ -148,4 +150,7 @@ while not solutions_size == new_solutions:
     for solution in solutions:
         full_decryption(solution)
     new_solutions = len(solutions)
-    
+
+# Remove the last line of jibberish
+sys.stdout.flush()
+sys.stdout.write(" "*len(cypher))
