@@ -67,6 +67,10 @@ def match(word,key,crypto_letters,translation):
 
 # Recursive function
 def decrypt(crypto_letters,translation,hashmap):
+    # Print out the text being worked on
+    output_trans = maketrans(crypto_letters,translation)
+    sys.stdout.write(cypher.translate(output_trans)+"\r")
+    sys.stdout.flush()
     # If a key has a letter not in the crypto_letters string, then call decrypt on it
     for key in hashmap:
         unused = unused_letters(crypto_letters,key)
