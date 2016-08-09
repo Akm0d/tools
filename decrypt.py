@@ -6,36 +6,18 @@ from string import maketrans
 max_word_size = 25
 offset = 65
 solutions = []
+maps = []
 filename = ""
 cypher = ""
-
-# Handle command line arguments
-if len(sys.argv) > 1:
-    if sys.argv[1] == "help" or sys.argv[1] == "-?" or sys.argv[1] == "-h" or sys.argv[1] == "--help":
-        print "usage: ./decrypt.py -d [dictionary] -c \"[cryptogram]\""
-        exit()
-if len(sys.argv) >= 3:
-    if sys.argv[1] == "-c":
-        cypher = sys.argv[2].upper()
-    elif sys.argv[1] == "-d":
-        filename = sys.argv[2]
-if len(sys.argv) == 5:
-    if sys.argv[3] == "-c":
-        cypher = sys.argv[4].upper()
-    elif sys.argv[3] == "-d":
-        filename = sys.argv[4]
-
-# Import the dictionary, ask for a filename if none was given
-if filename == "": 
-    filename = raw_input("Path to the dictionary file: [/usr/share/dict/words] ")
-    if filename == "":
-        filename = "/usr/share/dict/words"
-words = set()
-with open(filename) as f: words = set(f.readlines())
-
-# Get the cypher from user if there wasn't one on the command line
-if cypher == "":
-    cypher = raw_input("Enter the cypher, then press ENTER:\n").upper()
+known_letters = ""
+mapped_to = ""
+verbose = False
+thorough = False
+color = False
+blue = ""
+green = ""
+red = ""
+white = ""
 
 # Return letters in the string that aren't part of the input_letters
 def unused_letters(input_letters,input_string):
@@ -49,6 +31,64 @@ def unused_letters(input_letters,input_string):
             input_letters += x
             unused_letters += x
     return unused_letters
+
+# Handle command line arguments
+# Python's for loop doesn't work like a c++ for loop so I did it this way.
+a = 1
+while a < len(sys.argv):
+    if sys.argv[a] == "help" or sys.argv[a] == "-?" or sys.argv[a] == "-h" or sys.argv[a] == "--help":
+        print "usage: ./decrypt.py [-d dictionary.file] [-m <mapped>:<letters>] [cryptogram] [-v|--verbose] [-t|--thorough] [-c|--color]" 
+        print "example: ./decrypt.py -d dictionary.txt -m QWJFLD:ABCDEF KCGPBWK ZKFDMBX ZUFXUHAGDM XKCX"
+        exit()
+    # True or false command line options
+    elif sys.argv[a] == "-c" or sys.argv[a] == "--color":
+        color = True
+        blue = "\033[1;36;40m"
+        green = "\033[1;32;40m"
+        red = "\033[1;31;40m"
+        white = "\033[1;37;40m"
+    elif sys.argv[a] == "-t" or sys.argv[a] == "--thorough":
+        thorough = True
+    elif sys.argv[a] == "-v" or sys.argv[a] == "--verbose":
+        verbose = True
+    # Command line arguments with parameters
+    elif sys.argv[a] == "-m":
+        a+=1
+        if  a >= len(sys.argv) or sys.argv[a][0] == "-" or ':' not in sys.argv[a]:
+            print "-m takes an argument in the format ABCD:EFGH"
+            exit()
+        mapped_to = unused_letters("",re.sub(':.+$','',sys.argv[a].upper()))
+        known_letters = unused_letters("",re.sub('.+:','',sys.argv[a].upper()))
+        if not len(mapped_to) == len(known_letters):
+            print ("both sides of \"" + known_letters + ":" + mapped_to + "\" must be the same length") 
+            exit()
+    elif sys.argv[a] == "-d":
+        a+=1
+        if  a >= len(sys.argv) or sys.argv[a][0] == "-":
+            print "-d takes an argument!"
+            exit()
+        filename = sys.argv[a]
+    # Whatever is left over is part of the cypher as long as it doesn't start with a  hyphen
+    elif not sys.argv[a][0] == "-":
+        cypher += (sys.argv[a].upper() + " ")
+    # Anything that has a hyphen that hasen't been taken care of is illegal
+    else: 
+        print sys.argv[a] + " is not a recognized option"
+        exit()
+    a+=1
+
+# Import the dictionary, ask for a filename if none was given
+if filename == "": 
+    filename = raw_input("Path to the dictionary file: [/usr/share/dict/words] ")
+    if filename == "":
+        filename = "/usr/share/dict/words"
+words = set()
+with open(filename) as f: words = set(f.readlines())
+
+# Get the cypher from user if there wasn't one on the command line
+if cypher == "":
+    cypher = raw_input("Enter the cypher, then press ENTER:\n").upper()
+
 
 # See if a word matches what I have so far
 def match(word,key,crypto_letters,translation):
@@ -71,14 +111,22 @@ def decrypt(crypto_letters,translation,hashmap):
     #untested_letters = unused_letters("qwertyuiopasdfghjklzxcvbnm",crypto_letters)
     #output_trans = maketrans(crypto_letters+untested_letters,translation+"*"*len(untested_letters))
     output_trans = maketrans(crypto_letters,translation)
-    sys.stdout.write(cypher.translate(output_trans)+"\r")
+    sys.stdout.flush()
+    solution = cypher.translate(output_trans)
+    sys.stdout.write(solution+"\r")
     sys.stdout.flush()
     # If a key has a letter not in the crypto_letters string, then call decrypt on it
+    a=0
     for key in hashmap:
+        a+=1
         unused = unused_letters(crypto_letters,key)
         # Base case: Once all the letters in all the keys have been used
         if not unused == "":
+            b=0
             for word in hashmap[key]:
+                b+=1
+                sys.stdout.flush()
+                #sys.stdout.write(solution + " " + str(a+1) + "/" + str(len(hashmap)) + " " + str(b+1) + "/"+ str(len(hashmap[key])) + "    \r")
                 new_trans = unused_letters(translation,word)
                 if not new_trans == "":
                     # If the word has any letters in the translation, they should be in the right spot
@@ -125,32 +173,58 @@ def full_decryption(cypher_text):
         word_length += 1
 
     # Initialize Recursion
+    a = 0
     for key in hashmap:
+        a+=1
         #print "\n" + key + ":\n"+ str(hashmap[key])
+        b = 0
         for word in hashmap[key]:
-            answer = decrypt(unused_letters("",key),unused_letters("",word),hashmap)
+            b+=1
+            full_key = unused_letters("",mapped_to + key)
+            full_word = unused_letters("",known_letters + word)
+            if len(full_word) == len(full_key):
+                if full_key+full_word not in maps:
+                    #print full_key + ":" + full_word
+                    maps.append(full_key+full_word)
+                    answer = decrypt(full_key,full_word,hashmap)
+            else:
+                answer = ""
             # Turn answer into translate table
             mixed = re.sub(':.+$','',answer)
             translated = re.sub('.+:','',answer)
             if (len(mixed) == len(translated)) and not answer == "":
                 translate_table = maketrans(mixed,translated)
                 solution = cypher_text.translate(translate_table)
-                if (solution not in solutions):
+                if (solution not in solutions) and not answer == full_key+":"+full_word:
                     # print "Translate table -> " + answer
                     solutions.append(solution)
-                    print(solution)
+                    if verbose:
+                        print (" "*len(cypher))
+                        sys.stdout.flush()
+                        #print key + ":" + word
+                        print blue + answer + white
+                        #print unused_letters(mapped_to,mixed)
+                        print(solution + " " + blue + str(a+1) + "/" + str(len(hashmap)) + " " + str(b+1) + "/"+ str(len(hashmap[key]))+ white)
+                    else:
+                        print(solution)
 
 # Run the program once
 full_decryption(cypher)
 
 # run the program on each solution until There are no more possibilitie
-solutions_size = len(solutions)
-new_solutions = 1
-while not solutions_size == new_solutions:
-    for solution in solutions:
-        full_decryption(solution)
-    new_solutions = len(solutions)
+if thorough:
+    solutions_size = len(solutions)
+    new_solutions = 1
+    while not solutions_size == new_solutions:
+        for solution in solutions:
+            full_decryption(solution)
+        new_solutions = len(solutions)
 
-# Remove the last line of jibberish
-sys.stdout.flush()
-sys.stdout.write(" "*len(cypher))
+# Give advice if there were no solutions
+if len(solutions) == 0:
+    print red + "No solutions were found!\n" + white + "Try adding the --thorough flag, simplifying your -m map, or add/remove words from the cryptogram"
+else:
+    # Remove the last line of jibberish
+    sys.stdout.flush()
+    sys.stdout.write(" "*len(cypher))
+
