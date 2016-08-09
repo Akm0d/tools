@@ -11,6 +11,7 @@ filename = ""
 cypher = ""
 known_letters = ""
 mapped_to = ""
+precise = False
 verbose = False
 thorough = False
 color = False
@@ -37,7 +38,7 @@ def unused_letters(input_letters,input_string):
 a = 1
 while a < len(sys.argv):
     if sys.argv[a] == "help" or sys.argv[a] == "-?" or sys.argv[a] == "-h" or sys.argv[a] == "--help":
-        print "usage: ./decrypt.py [-d dictionary.file] [-m <mapped>:<letters>] [cryptogram] [-v|--verbose] [-t|--thorough] [-c|--color]" 
+        print "usage: ./decrypt.py [-d dictionary.file] [-m <mapped>:<letters>] [cryptogram] [-v|--verbose] [-t|--thorough] [-c|--color] [-p|--precise]" 
         print "example: ./decrypt.py -d dictionary.txt -m QWJFLD:ABCDEF KCGPBWK ZKFDMBX ZUFXUHAGDM XKCX"
         exit()
     # True or false command line options
@@ -47,6 +48,8 @@ while a < len(sys.argv):
         green = "\033[1;32;40m"
         red = "\033[1;31;40m"
         white = "\033[1;37;40m"
+    elif sys.argv[a] == "-p" or sys.argv[a] == "--precise":
+        precise = True
     elif sys.argv[a] == "-t" or sys.argv[a] == "--thorough":
         thorough = True
     elif sys.argv[a] == "-v" or sys.argv[a] == "--verbose":
@@ -196,17 +199,32 @@ def full_decryption(cypher_text):
                 translate_table = maketrans(mixed,translated)
                 solution = cypher_text.translate(translate_table)
                 if (solution not in solutions) and not answer == full_key+":"+full_word:
+                    valid_solution = True
+                    color_solution = ""
+                    # Double check that the solution is indeed a correct one, with "color" show it, with "precise" eliminate it
+                    if precise or color:
+                        for c in range (0,len(original_word_list)):
+                            solution_words = solution.split()
+                            if solution_words[c] not in hashmap[original_word_list[c]]:
+                                color_solution += red + solution_words[c] + " "
+                            else: 
+                                color_solution += green + solution_words[c] + " "
+                            if precise:
+                               valid_solution = False
+                    if color:
+                        solution = color_solution + white
                     # print "Translate table -> " + answer
-                    solutions.append(solution)
-                    if verbose:
-                        print (" "*len(cypher))
-                        sys.stdout.flush()
-                        #print key + ":" + word
-                        print blue + answer + white
-                        #print unused_letters(mapped_to,mixed)
-                        print(solution + " " + blue + str(a+1) + "/" + str(len(hashmap)) + " " + str(b+1) + "/"+ str(len(hashmap[key]))+ white)
-                    else:
-                        print(solution)
+                    if valid_solution:
+                        solutions.append(solution)
+                        if verbose:
+                            print (" "*len(cypher))
+                            sys.stdout.flush()
+                            #print key + ":" + word
+                            print blue + answer + white
+                            #print unused_letters(mapped_to,mixed)
+                            print(solution + " " + blue + str(a+1) + "/" + str(len(hashmap)) + " " + str(b+1) + "/"+ str(len(hashmap[key]))+ white)
+                        else:
+                            print(solution)
 
 # Run the program once
 full_decryption(cypher)
@@ -222,7 +240,7 @@ if thorough:
 
 # Give advice if there were no solutions
 if len(solutions) == 0:
-    print red + "No solutions were found!\n" + white + "Try adding the --thorough flag, simplifying your -m map, or add/remove words from the cryptogram"
+    print red + "No solutions were found!\n" + white + "Try adding the --thorough flag, removing the --precise flag, simplifying your -m map, or add/remove words from the cryptogram"
 else:
     # Remove the last line of jibberish
     sys.stdout.flush()
