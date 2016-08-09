@@ -183,6 +183,7 @@ def full_decryption(cypher_text):
         b = 0
         for word in hashmap[key]:
             b+=1
+            answer = ""
             full_key = unused_letters("",mapped_to + key)
             full_word = unused_letters("",known_letters + word)
             if len(full_word) == len(full_key):
@@ -190,8 +191,6 @@ def full_decryption(cypher_text):
                     #print full_key + ":" + full_word
                     maps.append(full_key+full_word)
                     answer = decrypt(full_key,full_word,hashmap)
-            else:
-                answer = ""
             # Turn answer into translate table
             mixed = re.sub(':.+$','',answer)
             translated = re.sub('.+:','',answer)
