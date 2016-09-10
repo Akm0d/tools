@@ -40,3 +40,11 @@ the decrypt.py script uses special characters and I need to make a few modificat
 sendfiles.pl
 ------------
 Sends files in the current working directory to a remote server
+
+aes.py
+------
+Personal Implementation of AES.  DO NOT use this in production
+
+main.py
+-------
+Sample main function to be used with aes.py
