@@ -48,3 +48,9 @@ Personal Implementation of AES.  DO NOT use this in production
 main.py
 -------
 Sample main function to be used with aes.py
+
+downloadAcclerator.py
+---------------------
+Download files quickly by using threads
+install requirements for this file with:
+pip install -r downloadAccelerator-requirements.txt
